@@ -341,7 +341,7 @@
 //       Object.assign(payload, statusBooleans);
 
 //       const response = await axios.post(
-//         "http://localhost:4000/api/bookings/create",
+//         "https://regalia-backend.vercel.app/api/bookings/create",
 //         payload
 //       );
 

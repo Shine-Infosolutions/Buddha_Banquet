@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import Logo from "../../../../assets/logo.png";
+import Logo from "../../../../assets/Regalia";
 
 const SharedInvoice = () => {
   const { id } = useParams();
@@ -128,7 +128,7 @@ const SharedInvoice = () => {
       link.click();
       
       // Open WhatsApp with message
-      const message = `Hi ${booking.name}, here is your booking invoice from Ashoka Hotel. Please find the PDF attachment.`;
+      const message = `Hi ${booking.name}, here is your booking invoice from REGALIA. Please find the PDF attachment.`;
       const whatsappUrl = `https://wa.me/${booking.whatsapp || booking.number}?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');
       
@@ -147,7 +147,7 @@ const SharedInvoice = () => {
               <div className="flex flex-col items-center space-y-2 print:flex-row print:space-y-0 print:space-x-4">
                 <img
                   src={Logo}
-                  alt="Ashoka Hotel Logo"
+                  alt="REGALIA"
                   className="w-24 h-24 object-contain rounded-lg print:w-16 print:h-16"
                 />
                 <p className="text-gray-600 text-center print:text-lg print:font-semibold print:text-black">Booking Invoice</p>
@@ -352,7 +352,7 @@ const SharedInvoice = () => {
 
             {/* Footer */}
             <div className="border-t border-gray-200 pt-6 text-center text-sm text-gray-600 print:pt-3 print:text-xs print:text-black">
-              <p className="mb-2 print:mb-1">Thank you for choosing Ashoka Hotel!</p>
+              <p className="mb-2 print:mb-1">Thank you for choosing REGALIA!</p>
               <p>For any queries, please contact us at your convenience.</p>
             </div>
           </div>

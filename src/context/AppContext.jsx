@@ -1,4 +1,14 @@
 import { createContext, useContext, useState } from 'react'
+import axios from 'axios'
+
+// Configure axios
+const axiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'https://regalia-backend.vercel.app',
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
 
 const AppContext = createContext()
 
@@ -18,7 +28,8 @@ export const AppProvider = ({ children }) => {
     user,
     setUser,
     loading,
-    setLoading
+    setLoading,
+    axios: axiosInstance
   }
 
   return (

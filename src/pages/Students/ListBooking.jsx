@@ -30,96 +30,74 @@ const ListBooking = ({ setSidebarOpen }) => {
   const readyState = 0;
   const sendMessage = () => {};
   
-  // Detect mobile view with better breakpoint
+  // Detect mobile view
   const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth <= 768 : false
+    typeof window !== "undefined" ? window.innerWidth <= 600 : false
   );
-  
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => setIsMobile(window.innerWidth <= 600);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-  
   // Get user role from localStorage
   const userRole = localStorage.getItem("role") || "Staff";
 
-  const fetchUsers = async () => {
+  const fetchUsers = () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `https://regalia-backend.vercel.app/api/bookings/`
-      );
-      
-      console.log('API Response:', response.data);
-      
-      let dataArray = [];
-      
-      // Handle different response structures
-      if (response.data) {
-        if (Array.isArray(response.data)) {
-          dataArray = response.data;
-        } else if (response.data.success && Array.isArray(response.data.data)) {
-          dataArray = response.data.data;
-        } else if (response.data.data && Array.isArray(response.data.data)) {
-          dataArray = response.data.data;
-        }
-      }
-      
-      if (dataArray.length > 0) {
-        const processedData = dataArray.map((item) => {
-          const totalAdvance = Array.isArray(item.advance) 
-            ? item.advance.reduce((sum, payment) => sum + (payment.amount || 0), 0)
-            : (typeof item.advance === 'number' ? item.advance : 0);
-          
-          return {
-            ...item,
-            advance: totalAdvance,
-            total: item.total ?? 0,
-            balance: item.balance ?? 0,
-            startDate: item.eventDate || item.startDate,
-          };
-        }).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+      axios
+        .get(
+          `https://regalia-backend.vercel.app/api/bookings/pg?page=${currentPage}`
+        )
+        .then((res) => {
+          if (res.data) {
+            const processedData = res.data.data.map((item) => {
+              // Calculate total advance from array
+              const totalAdvance = Array.isArray(item.advance) 
+                ? item.advance.reduce((sum, payment) => sum + (payment.amount || 0), 0)
+                : (typeof item.advance === 'number' ? item.advance : 0);
+              
+              return {
+                ...item,
+                advance: totalAdvance,
+                total: item.total ?? 0,
+                balance: item.balance ?? 0,
+              };
+            }).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
-        console.log('Processed Data:', processedData);
-        setUserData(processedData);
-        setTotalPages(processedData.length);
-      } else {
-        console.warn('No booking data found');
-        setUserData([]);
-        setTotalPages(0);
-      }
+            console.log(processedData);
+            setUserData(processedData);
+            setTotalPages(res.data.total);
+            setLoading(false);
+          }
+        })
+        .catch((err) => {
+          console.error('Fetch Users Error:', err);
+          alert('Failed to load bookings. Please try again later.');
+          setLoading(false);
+        });
     } catch (error) {
-      console.error('Fetch Users Error:', error);
-      setUserData([]);
-      setTotalPages(0);
-    } finally {
+      console.log(error);
       setLoading(false);
     }
   };
 
-  const fetchAllData = async () => {
+  const fetchAllData = () => {
     try {
-      const response = await axios.get(`https://regalia-backend.vercel.app/api/bookings/`);
-
-      let dataArray = [];
-      
-      if (response.data) {
-        if (Array.isArray(response.data)) {
-          dataArray = response.data;
-        } else if (response.data.success && Array.isArray(response.data.data)) {
-          dataArray = response.data.data;
-        } else if (response.data.data && Array.isArray(response.data.data)) {
-          dataArray = response.data.data;
-        }
-      }
-      
-      if (dataArray.length > 0) {
-        console.log("All Data:", dataArray);
-        setAllData(dataArray);
-      }
+      axios
+        .get(`https://regalia-backend.vercel.app/api/bookings`)
+        .then((res) => {
+          if (res.data) {
+            console.log("All Data:", res.data);
+            setAllData(res.data); // All record
+          }
+        })
+        .catch((err) => {
+          console.error("All Data Error:", err);
+          alert('Failed to load all data. Please try again later.');
+        });
     } catch (error) {
-      console.error("All Data Error:", error);
+      console.log("All Data Try-Catch Error:", error);
     }
   };
 
@@ -128,15 +106,11 @@ const ListBooking = ({ setSidebarOpen }) => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
-    
-    // Add delay to prevent rapid API calls
-    const timer = setTimeout(() => {
-      fetchAllData();
-      fetchUsers();
-    }, 100);
-    
-    return () => clearTimeout(timer);
+    fetchAllData();
+    fetchUsers();
   }, [currentPage]);
+
+
 
 
 
@@ -433,7 +407,15 @@ const ListBooking = ({ setSidebarOpen }) => {
   };
 
   if (pageLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#c3ad6b] mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">Booking List</h2>
+          <p className="text-gray-500">Please wait...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -577,27 +559,27 @@ const ListBooking = ({ setSidebarOpen }) => {
                               </span>
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="flex flex-wrap gap-1">
                             <Link
                               to={`/banquet/update-booking/${item._id}`}
-                              className="inline-flex items-center justify-center gap-1 bg-[#c3ad6b] hover:bg-[#b39b5a] active:bg-[#a08a4f] text-white px-3 py-2 rounded-lg shadow text-xs font-semibold transition-colors touch-manipulation"
+                              className="flex-1 min-w-[60px] inline-flex items-center justify-center gap-1 bg-[#c3ad6b] hover:bg-[#b39b5a] text-white px-2 py-1 rounded text-xs font-semibold transition-colors"
                               title="Edit Booking"
                             >
-                              <FiEdit /> Edit
+                              <FiEdit className="text-xs" /> Edit
                             </Link>
                             <Link
                               to={`/banquet/menu-view/${item._id}`}
-                              className="inline-flex items-center justify-center gap-1 bg-gray-700 text-white rounded-lg shadow hover:bg-gray-800 active:bg-gray-900 transition-colors font-semibold px-3 py-2 text-xs touch-manipulation"
+                              className="flex-1 min-w-[60px] inline-flex items-center justify-center gap-1 bg-gray-700 text-white rounded hover:bg-gray-800 transition-colors font-semibold px-2 py-1 text-xs"
                               title="View Menu"
                             >
-                              <FiEye /> Menu
+                              <FiEye className="text-xs" /> Menu
                             </Link>
                             <Link
                               to={`/banquet/invoice/${item._id}`}
-                              className="inline-flex items-center justify-center gap-1 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 active:bg-blue-800 transition-colors font-semibold px-3 py-2 text-xs touch-manipulation"
+                              className="flex-1 min-w-[70px] inline-flex items-center justify-center gap-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-semibold px-2 py-1 text-xs"
                               title="Generate Invoice"
                             >
-                              <FiFileText /> Invoice
+                              <FiFileText className="text-xs" /> Invoice
                             </Link>
                             <button
                               onClick={() => {
@@ -612,21 +594,21 @@ const ListBooking = ({ setSidebarOpen }) => {
                                   alert("Invalid phone number for WhatsApp. Must be 10 digits (India) or 12 digits with country code.");
                                   return;
                                 }
-                                const message = `🌟 *Welcome to Hotel ASHOKA HOTEL!* 🌟\n\nHere's your booking confirmation:\n\n📅 *Date:* ${new Date(item.startDate).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}\n⏰ *Time:* ${item.time || "To be confirmed"}\n👨👩👧👦 *Guest Name:* ${item.name}\n📞 *Contact:* ${item.number}\n🍽️ *Plan:* ${item.ratePlan}\n🥗 *Food Type:* ${item.foodType}\n🏛️ *Hall/Area:* ${item.hall}\n👥 *Pax:* ${item.pax || "To be confirmed"}\n🔄 *Status:* ${item.bookingStatus}\n\n💰 *Payment Details:*\n💵 *Total Amount:* ₹${item.total || "To be confirmed"}\n💳 *Advance Paid:* ₹${item.advance}\n💸 *Balance Due:* ₹${item.balance || (item.total - item.advance) || "To be confirmed"}\n\n📍 *Venue Address:* Medical Road, Gorakhpur\n\nThank you for choosing us! We look forward to serving you. 🙏\n\n`;
+                                const message = `🌟 *Welcome to Hotel REGALIA* 🌟\n\nHere's your booking confirmation:\n\n📅 *Date:* ${new Date(item.startDate).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}\n⏰ *Time:* ${item.time || "To be confirmed"}\n👨👩👧👦 *Guest Name:* ${item.name}\n📞 *Contact:* ${item.number}\n🍽️ *Plan:* ${item.ratePlan}\n🥗 *Food Type:* ${item.foodType}\n🏛️ *Hall/Area:* ${item.hall}\n👥 *Pax:* ${item.pax || "To be confirmed"}\n🔄 *Status:* ${item.bookingStatus}\n\n💰 *Payment Details:*\n💵 *Total Amount:* ₹${item.total || "To be confirmed"}\n💳 *Advance Paid:* ₹${item.advance}\n💸 *Balance Due:* ₹${item.balance || (item.total - item.advance) || "To be confirmed"}\n\n📍 *Venue Address:* Medical Road, Gorakhpur\n\nThank you for choosing us! We look forward to serving you. 🙏\n\n`;
                                 const whatsappUrl = `https://web.whatsapp.com/send/?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
                                 window.open(whatsappUrl, "_blank");
                               }}
-                              className="inline-flex items-center justify-center gap-1 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 active:bg-green-700 transition-colors font-semibold px-3 py-2 text-xs touch-manipulation"
+                              className="flex-1 min-w-[80px] inline-flex items-center justify-center gap-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors font-semibold px-2 py-1 text-xs"
                               title="Send WhatsApp Message"
                             >
-                              <FaWhatsapp /> WhatsApp
+                              <FaWhatsapp className="text-xs" /> WhatsApp
                             </button>
                             <button
                               onClick={() => handleDeleteModal(item)}
-                              className="inline-flex items-center justify-center gap-1 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 active:bg-red-800 transition-colors font-semibold px-3 py-2 text-xs touch-manipulation col-span-2"
+                              className="flex-1 min-w-[60px] inline-flex items-center justify-center gap-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors font-semibold px-2 py-1 text-xs"
                               title="Delete Booking"
                             >
-                              <FiTrash2 /> Delete
+                              <FiTrash2 className="text-xs" /> Delete
                             </button>
                           </div>
                         </div>
@@ -635,23 +617,23 @@ const ListBooking = ({ setSidebarOpen }) => {
                   </div>
 
                   {/* Table view for desktop/tablet */}
-                  <div className="hidden sm:block">
+                  <div className="hidden sm:block overflow-x-auto">
                     <table
                       ref={tableRef}
-                      className="w-full table-auto text-sm text-left border-separate border-spacing-y-2"
+                      className="w-full table-fixed text-sm text-left border-separate border-spacing-y-2 min-w-[1200px]"
                     >
-                      <thead className="bg-gold text-black font-semibold sticky top-0 z-10">
+                      <thead className="bg-[#c3ad6b] text-black font-semibold sticky top-0 z-10">
                         <tr>
-                          <th className="py-3 px-6 rounded-tl-xl">Name</th>
-                          <th className="py-3 px-6">Number</th>
-                          <th className="py-3 px-6">Booking Date</th>
-                          <th className="py-3 px-6">Rate Plan</th>
-                          <th className="py-3 px-6">Type</th>
-                          <th className="py-3 px-6">Advance</th>
-                          <th className="py-3 px-6">Total Amount</th>
-                          <th className="py-3 px-6">Hall</th>
-                          <th className="py-3 px-6">Status</th>
-                          <th className="py-3 px-6 rounded-tr-xl">Action</th>
+                          <th className="py-3 px-4 rounded-tl-xl w-48">Name</th>
+                          <th className="py-3 px-4 w-32">Number</th>
+                          <th className="py-3 px-4 w-32">Booking Date</th>
+                          <th className="py-3 px-4 w-24">Rate Plan</th>
+                          <th className="py-3 px-4 w-20">Type</th>
+                          <th className="py-3 px-4 w-24">Advance</th>
+                          <th className="py-3 px-4 w-28">Total Amount</th>
+                          <th className="py-3 px-4 w-32">Hall</th>
+                          <th className="py-3 px-4 w-24">Status</th>
+                          <th className="py-3 px-4 rounded-tr-xl w-80">Action</th>
                         </tr>
                       </thead>
                       <tbody className="text-gray-700">
@@ -664,34 +646,36 @@ const ListBooking = ({ setSidebarOpen }) => {
                                 : "bg-white hover:bg-[#c3ad6b]/20 transition-colors"
                             }
                           >
-                            <td className="px-6 py-4 whitespace-nowrap font-bold flex items-center gap-3">
-                              <div className="w-8 h-8 bg-[#c3ad6b]/20 rounded-full flex items-center justify-center text-[#c3ad6b] font-bold text-base">
-                                {item.name?.[0]?.toUpperCase() || "?"}
+                            <td className="px-4 py-4 font-bold">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-[#c3ad6b]/20 rounded-full flex items-center justify-center text-[#c3ad6b] font-bold text-sm flex-shrink-0">
+                                  {item.name?.[0]?.toUpperCase() || "?"}
+                                </div>
+                                <span className="truncate">{item.name}</span>
                               </div>
-                              {item.name}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {item.phone || item.number}
+                            <td className="px-4 py-4">
+                              <span className="truncate">{item.phone || item.number}</span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4">
                               {new Date(item.eventDate || item.startDate).toLocaleDateString('en-GB')}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {item.ratePlan}
+                            <td className="px-4 py-4">
+                              <span className="truncate">{item.ratePlan}</span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4">
                               {item.foodType}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4">
                               ₹{item.advance || 0}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4">
                               ₹{item.total || 0}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {item.hall}
+                            <td className="px-4 py-4">
+                              <span className="truncate">{item.hall}</span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4">
                               <span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
                                 item.bookingStatus === 'Confirmed' 
                                   ? 'bg-green-100 text-green-800' 
@@ -702,28 +686,28 @@ const ListBooking = ({ setSidebarOpen }) => {
                                 {item.bookingStatus}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex flex-wrap gap-1">
+                            <td className="px-4 py-4">
+                              <div className="flex flex-wrap gap-1 justify-start">
                                 <Link
                                   to={`/banquet/update-booking/${item._id}`}
                                   className="inline-flex items-center gap-1 bg-[#c3ad6b] hover:bg-[#b39b5a] text-white px-2 py-1 rounded text-xs font-semibold transition-colors"
                                   title="Edit Booking"
                                 >
-                                  <FiEdit /> Edit
+                                  <FiEdit className="text-xs" /> Edit
                                 </Link>
                                 <Link
                                   to={`/banquet/menu-view/${item._id}`}
-                                  className="inline-flex items-center gap-1 bg-gray-700 text-white rounded-lg shadow hover:bg-gray-800 transition-colors font-semibold px-2 py-1 text-xs"
+                                  className="inline-flex items-center gap-1 bg-gray-700 text-white rounded hover:bg-gray-800 transition-colors font-semibold px-2 py-1 text-xs"
                                   title="View Menu"
                                 >
-                                  <FiEye /> Menu
+                                  <FiEye className="text-xs" /> Menu
                                 </Link>
                                 <Link
                                   to={`/banquet/invoice/${item._id}`}
-                                  className="inline-flex items-center gap-1 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors font-semibold px-2 py-1 text-xs"
+                                  className="inline-flex items-center gap-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-semibold px-2 py-1 text-xs"
                                   title="Invoice"
                                 >
-                                  <FiFileText /> Invoice
+                                  <FiFileText className="text-xs" /> Invoice
                                 </Link>
                                 <button
                                   onClick={() => {
@@ -738,21 +722,21 @@ const ListBooking = ({ setSidebarOpen }) => {
                                       alert("Invalid phone number for WhatsApp. Must be 10 digits (India) or 12 digits with country code.");
                                       return;
                                     }
-                                    const message = `🌟 *Welcome to Hotel ASHOKA HOTEL!* 🌟\n\nHere's your booking confirmation:\n\n📅 *Date:* ${new Date(item.startDate).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}\n⏰ *Time:* ${item.time || "To be confirmed"}\n👨👩👧👦 *Guest Name:* ${item.name}\n📞 *Contact:* ${item.number}\n🍽️ *Plan:* ${item.ratePlan}\n🥗 *Food Type:* ${item.foodType}\n🏛️ *Hall/Area:* ${item.hall}\n👥 *Pax:* ${item.pax || "To be confirmed"}\n🔄 *Status:* ${item.bookingStatus}\n\n💰 *Payment Details:*\n💵 *Total Amount:* ₹${item.total || "To be confirmed"}\n💳 *Advance Paid:* ₹${item.advance}\n💸 *Balance Due:* ₹${item.balance || (item.total - item.advance) || "To be confirmed"}\n\n📍 *Venue Address:* Medical Road, Gorakhpur\n\nThank you for choosing us! We look forward to serving you. 🙏\n\n`;
+                                    const message = `🌟 *Welcome to Hotel REGALIA!* 🌟\n\nHere's your booking confirmation:\n\n📅 *Date:* ${new Date(item.startDate).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}\n⏰ *Time:* ${item.time || "To be confirmed"}\n👨👩👧👦 *Guest Name:* ${item.name}\n📞 *Contact:* ${item.number}\n🍽️ *Plan:* ${item.ratePlan}\n🥗 *Food Type:* ${item.foodType}\n🏛️ *Hall/Area:* ${item.hall}\n👥 *Pax:* ${item.pax || "To be confirmed"}\n🔄 *Status:* ${item.bookingStatus}\n\n💰 *Payment Details:*\n💵 *Total Amount:* ₹${item.total || "To be confirmed"}\n💳 *Advance Paid:* ₹${item.advance}\n💸 *Balance Due:* ₹${item.balance || (item.total - item.advance) || "To be confirmed"}\n\n📍 *Venue Address:* Medical Road, Gorakhpur\n\nThank you for choosing us! We look forward to serving you. 🙏\n\n`;
                                     const whatsappUrl = `https://web.whatsapp.com/send/?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
                                     window.open(whatsappUrl, "_blank");
                                   }}
-                                  className="inline-flex items-center gap-1 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition-colors font-semibold px-2 py-1 text-xs"
+                                  className="inline-flex items-center gap-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors font-semibold px-2 py-1 text-xs"
                                   title="Send WhatsApp Message"
                                 >
-                                  <FaWhatsapp /> WhatsApp
+                                  <FaWhatsapp className="text-xs" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteModal(item)}
-                                  className="inline-flex items-center gap-1 bg-red-600 text-white rounded shadow hover:bg-red-700 transition-colors font-semibold px-2 py-1 text-xs"
+                                  className="inline-flex items-center gap-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors font-semibold px-2 py-1 text-xs"
                                   title="Delete Booking"
                                 >
-                                  <FiTrash2 /> Delete
+                                  <FiTrash2 className="text-xs" />
                                 </button>
                               </div>
                             </td>

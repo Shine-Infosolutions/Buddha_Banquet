@@ -115,7 +115,7 @@ const PlanLimitManager = () => {
         if (response.ok) {
           alert('Category created successfully');
           setShowCategoryForm(false);
-          const categoriesResponse = await fetch('http://localhost:4000/api/categories/all');
+          const categoriesResponse = await fetch('https://regalia-backend.vercel.app/api/categories/all');
           if (categoriesResponse.ok) {
             const data = await categoriesResponse.json();
             setCategories(Array.isArray(data) ? data : []);

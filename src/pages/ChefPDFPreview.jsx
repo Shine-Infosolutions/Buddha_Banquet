@@ -14,7 +14,7 @@ const ChefPDFPreview = ({ booking, className }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:4000/api/banquet-menus/${booking._id}`,
+        `https://regalia-backend.vercel.app/api/banquet-menus/${booking._id}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -105,8 +105,8 @@ const ChefPDFPreview = ({ booking, className }) => {
               ) : (
                 <div ref={printRef} className="bg-white p-8 max-w-4xl mx-auto">
                   <div className="text-center mb-8">
-                    <img src={Logo} alt="Ashoka Hotel" className="w-20 h-20 mx-auto mb-4" />
-                    <h1 className="text-2xl font-bold">ASHOKA HOTEL - CHEF INSTRUCTIONS</h1>
+                    <img src={Logo} alt="REGALIA" className="w-20 h-20 mx-auto mb-4" />
+                    <h1 className="text-2xl font-bold">REGALIA - CHEF INSTRUCTIONS</h1>
                   </div>
                   
                   <div className="mb-8">

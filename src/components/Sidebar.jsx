@@ -52,48 +52,51 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
       {/* Logo Section */}
-      <div className="p-4 sm:p-6 border-b border-gray-600">
+      <div className="p-4 border-b border-gray-600">
         <div className="flex flex-col items-center">
-          <div className="w-32 h-32 sm:w-40 sm:h-40">
+          <div className="w-40 h-40">
             <img src={RegaliaLogo} alt="Regalia Logo" className="w-full h-full object-contain" />
           </div>
+          <h1 className="text-[#c3ad6b] font-bold text-lg mt-2">REGALIA</h1>
         </div>
       </div>
 
       {/* Admin Section */}
-      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-700">
-        <h2 className="text-[#c3ad6b] font-semibold text-base sm:text-lg">ADMIN</h2>
+      <div className="px-6 py-4 border-b border-gray-700">
+        <h2 className="text-[#c3ad6b] font-semibold text-lg">ADMIN PANEL</h2>
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 px-3 sm:px-4 py-4 flex flex-col">
-        <ul className="space-y-2 flex-1">
+      <nav className="flex-1 px-4 py-6 flex flex-col">
+        <ul className="space-y-3 flex-1">
           {menuItems.map((item, index) => (
             <li key={index}>
               <Link
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center px-3 sm:px-4 py-3 rounded-lg transition-colors duration-200 ${
+                className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
                   location.pathname === item.path
-                    ? 'bg-[#c3ad6b] text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    ? 'bg-[#c3ad6b] text-white shadow-lg'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white hover:shadow-md'
                 }`}
               >
-                <item.icon className="w-4 h-4 sm:w-5 sm:h-5 mr-3 text-[#c3ad6b] flex-shrink-0" />
-                <span className="font-medium text-sm sm:text-base">{item.title}</span>
+                <item.icon className={`w-5 h-5 mr-3 flex-shrink-0 ${
+                  location.pathname === item.path ? 'text-white' : 'text-[#c3ad6b]'
+                }`} />
+                <span className="font-medium text-base">{item.title}</span>
               </Link>
             </li>
           ))}
         </ul>
         
         {/* Logout Button */}
-        <div className="p-3 sm:p-4">
+        <div className="mt-6 pt-6 border-t border-gray-700">
           <button
             onClick={handleLogout}
-            className="flex items-center w-full px-3 sm:px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
+            className="flex items-center w-full px-4 py-3 rounded-lg text-gray-300 hover:bg-red-600 hover:text-white transition-all duration-200 hover:shadow-md"
           >
-            <FaSignOutAlt className="w-4 h-4 sm:w-5 sm:h-5 mr-3 text-[#c3ad6b] flex-shrink-0" />
-            <span className="font-medium text-sm sm:text-base">Logout</span>
+            <FaSignOutAlt className="w-5 h-5 mr-3 text-red-400 flex-shrink-0" />
+            <span className="font-medium text-base">Logout</span>
           </button>
         </div>
       </nav>

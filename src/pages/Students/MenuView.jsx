@@ -97,16 +97,13 @@ const MenuView = () => {
           <img
             src={Logo}
             alt="Hotel Logo"
-            className="w-[220px] h-[110px] mx-auto mb-4"
+            className="w-48 h-48 mx-auto mb-4 object-contain"
           />
-          {/* <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl drop-shadow">
-            ASHOKA HOTEL
-          </h2> */}
         </div>
         <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
           <div className="px-4 py-5 sm:px-4 bg-gradient-to-r from-[#f7f5ef] to-[#c3ad6b]/30">
             <h3 className="text-lg leading-6 font-bold text-gray-900 text-center">
-              ASHOKA HOTEL
+              REGALIA
             </h3>
           </div>
           <div className="h-3"></div>
