@@ -579,12 +579,14 @@ const ListBooking = ({ setSidebarOpen }) => {
                             <Link
                               to={`/banquet/update-booking/${item._id}`}
                               className="flex-1 inline-flex items-center justify-center gap-1 bg-[#c3ad6b] hover:bg-[#b39b5a] text-white px-3 py-2 rounded shadow text-xs font-semibold transition-colors"
+                              title="Edit Booking"
                             >
                               <FiEdit /> Edit
                             </Link>
                             <Link
                               to={`/banquet/menu-view/${item._id}`}
                               className="flex-1 inline-flex items-center justify-center gap-1 bg-gray-700 text-white rounded-lg shadow hover:bg-gray-800 transition-colors font-semibold px-3 py-2 text-xs"
+                              title="View Menu"
                             >
                               <FiEye /> View Menu
                             </Link>
@@ -593,6 +595,7 @@ const ListBooking = ({ setSidebarOpen }) => {
                             <Link
                               to={`/banquet/invoice/${item._id}`}
                               className="flex-1 inline-flex items-center justify-center gap-1 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors font-semibold px-3 py-2 text-xs"
+                              title="Generate Invoice"
                             >
                               <FiFileText /> Invoice
                             </Link>
@@ -621,12 +624,14 @@ const ListBooking = ({ setSidebarOpen }) => {
                                 window.open(whatsappUrl, "_blank");
                               }}
                               className="flex-1 inline-flex items-center justify-center gap-1 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition-colors font-semibold px-3 py-2 text-xs"
+                              title="Send WhatsApp Message"
                             >
                               <FaWhatsapp /> WhatsApp
                             </button>
                             <button
                               onClick={() => handleDeleteModal(item)}
                               className="flex-1 inline-flex items-center justify-center gap-1 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition-colors font-semibold px-3 py-2 text-xs"
+                              title="Delete Booking"
                             >
                               <FiTrash2 /> Delete
                             </button>
@@ -705,29 +710,28 @@ const ListBooking = ({ setSidebarOpen }) => {
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex gap-1">
+                              <div className="flex flex-wrap gap-1">
                                 <Link
                                   to={`/banquet/update-booking/${item._id}`}
                                   className="inline-flex items-center gap-1 bg-[#c3ad6b] hover:bg-[#b39b5a] text-white px-2 py-1 rounded text-xs font-semibold transition-colors"
                                   title="Edit Booking"
                                 >
-                                  <FiEdit />
+                                  <FiEdit /> Edit
                                 </Link>
                                 <Link
                                   to={`/banquet/menu-view/${item._id}`}
                                   className="inline-flex items-center gap-1 bg-gray-700 text-white rounded-lg shadow hover:bg-gray-800 transition-colors font-semibold px-2 py-1 text-xs"
                                   title="View Menu"
                                 >
-                                  <FiEye />
+                                  <FiEye /> Menu
                                 </Link>
                                 <Link
                                   to={`/banquet/invoice/${item._id}`}
                                   className="inline-flex items-center gap-1 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors font-semibold px-2 py-1 text-xs"
                                   title="Invoice"
                                 >
-                                  <FiFileText />
+                                  <FiFileText /> Invoice
                                 </Link>
-
                                 <button
                                   onClick={() => {
                                     let raw = String(item.whatsapp || item.number || "").replace(/[^\d]/g, "");
@@ -748,14 +752,14 @@ const ListBooking = ({ setSidebarOpen }) => {
                                   className="inline-flex items-center gap-1 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition-colors font-semibold px-2 py-1 text-xs"
                                   title="Send WhatsApp Message"
                                 >
-                                  <FaWhatsapp />
+                                  <FaWhatsapp /> WhatsApp
                                 </button>
                                 <button
                                   onClick={() => handleDeleteModal(item)}
                                   className="inline-flex items-center gap-1 bg-red-600 text-white rounded shadow hover:bg-red-700 transition-colors font-semibold px-2 py-1 text-xs"
                                   title="Delete Booking"
                                 >
-                                  <FiTrash2 />
+                                  <FiTrash2 /> Delete
                                 </button>
                               </div>
                             </td>
