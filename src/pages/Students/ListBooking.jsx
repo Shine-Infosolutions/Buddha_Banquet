@@ -464,7 +464,7 @@ const ListBooking = ({ setSidebarOpen }) => {
         <div className="bg-white rounded-lg xs:rounded-xl shadow-md overflow-hidden">
           <div className="p-3 xs:p-4 sm:p-6 space-y-4 xs:space-y-6">
             {/* Action Buttons */}
-            <div className="flex flex-col gap-3 xs:gap-4">
+            <div className="flex justify-between items-center">
               <div className="flex items-center space-x-2 xs:space-x-3">
                 <div className="bg-[#c3ad6b]/20 p-1.5 xs:p-2 rounded-full">
                   <FiPlus className="text-[#c3ad6b] text-base xs:text-lg" />
