@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import MenuItemManager from './MenuItemManager';
 import PlanLimitManager from './PlanLimitManager';
 import DashboardLoader from '../DashboardLoader';
@@ -6,6 +7,7 @@ import DashboardLoader from '../DashboardLoader';
 const MenuPlanManager = () => {
   const [activeTab, setActiveTab] = useState('menu');
   const [pageLoading, setPageLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -21,7 +23,16 @@ const MenuPlanManager = () => {
   return (
     <div className="min-h-screen" style={{backgroundColor: 'hsl(45, 100%, 95%)'}}>
       <div className="p-3 xs:p-4 sm:p-6">
-        <h1 className="text-lg xs:text-xl sm:text-2xl font-bold mb-3 xs:mb-4 sm:mb-6 px-1" style={{color: 'hsl(45, 100%, 20%)'}}>Menu & Plans Management</h1>
+        <div className="flex items-center mb-3 xs:mb-4 sm:mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="mr-3 p-2 rounded-lg hover:bg-opacity-80 transition-colors"
+            style={{backgroundColor: 'hsl(45, 43%, 58%)', color: 'white'}}
+          >
+            ← Back
+          </button>
+          <h1 className="text-lg xs:text-xl sm:text-2xl font-bold px-1" style={{color: 'hsl(45, 100%, 20%)'}}>Menu & Plans Management</h1>
+        </div>
         
         <div className="mb-4 xs:mb-6">
           <div className="flex border-b overflow-x-auto" style={{borderColor: 'hsl(45, 100%, 85%)'}}>

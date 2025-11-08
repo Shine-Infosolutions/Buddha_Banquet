@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FaTrash } from 'react-icons/fa'
+import { FaTrash, FaEdit } from 'react-icons/fa'
 
 
 
@@ -238,7 +238,9 @@ const MenuItemManager = () => {
   const handleEdit = (id) => {
     const item = menuItems.find(item => (item._id || item.id) === id)
     setEditingItem(id)
-    setEditForm({ name: item.name, category: item.category, foodType: item.foodType })
+    // Extract category ID if it's an object
+    const categoryId = typeof item.category === 'object' ? item.category._id : item.category
+    setEditForm({ name: item.name, category: categoryId, foodType: item.foodType })
   }
 
   const saveEdit = async () => {
@@ -496,6 +498,12 @@ const MenuItemManager = () => {
                           <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Active</span>
                         </td>
                         <td className="px-6 py-4">
+                          <button 
+                            onClick={() => handleEdit(item._id || item.id)}
+                            className="text-blue-500 hover:text-blue-700 p-2 mr-2"
+                          >
+                            <FaEdit />
+                          </button>
                           <button 
                             onClick={() => handleDelete(item._id || item.id)}
                             className="text-red-500 hover:text-red-700 p-2"

@@ -37,23 +37,29 @@ const PlanLimitManager = () => {
 
   const handleSave = async (planData) => {
     try {
-      const response = await fetch('https://regalia-backend.vercel.app/api/plan-limits', {
-        method: 'POST',
+      const isEditing = planData._id;
+      const url = isEditing 
+        ? `https://regalia-backend.vercel.app/api/plan-limits/${planData._id}`
+        : 'https://regalia-backend.vercel.app/api/plan-limits';
+      const method = isEditing ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(planData)
       });
       
       if (response.ok) {
-        alert('Plan limits saved successfully');
+        alert(`Plan limits ${isEditing ? 'updated' : 'saved'} successfully`);
         setEditingPlan(null);
         fetchLimits();
       } else {
         const errorData = await response.json();
-        alert(errorData.message || 'Failed to save plan limits');
+        alert(errorData.message || `Failed to ${isEditing ? 'update' : 'save'} plan limits`);
       }
     } catch (error) {
       console.error('Save error:', error);
-      alert('Failed to save plan limits');
+      alert(`Failed to ${planData._id ? 'update' : 'save'} plan limits`);
     }
   };
 
