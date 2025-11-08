@@ -44,12 +44,16 @@ const PlanLimitManager = () => {
       });
       
       if (response.ok) {
-        alert('Plan limits updated successfully');
+        alert('Plan limits saved successfully');
         setEditingPlan(null);
         fetchLimits();
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || 'Failed to save plan limits');
       }
     } catch (error) {
-      alert('Failed to update plan limits');
+      console.error('Save error:', error);
+      alert('Failed to save plan limits');
     }
   };
 
@@ -73,7 +77,11 @@ const PlanLimitManager = () => {
     const [showCategoryForm, setShowCategoryForm] = useState(false);
     const [formData, setFormData] = useState(() => {
       if (plan && Object.keys(plan).length > 0) {
-        return plan;
+        console.log('Editing plan:', plan);
+        return {
+          ...plan,
+          limits: plan.limits || {}
+        };
       }
       return {
         ratePlan: 'Silver',
@@ -259,7 +267,7 @@ const PlanLimitManager = () => {
                   <input
                     type="number"
                     min="0"
-                    value={(formData.limits && formData.limits[category._id]) || 0}
+                    value={formData.limits?.[category._id] || formData.limits?.[category.cateName] || 0}
                     onChange={(e) => handleLimitChange(category._id, e.target.value)}
                     className="w-full border rounded px-3 py-2"
                   />
@@ -312,7 +320,7 @@ const PlanLimitManager = () => {
         <h2 className="text-lg xs:text-xl sm:text-2xl font-bold" style={{color: 'hsl(45, 100%, 20%)'}}>Plan Limit Manager</h2>
         <button
           onClick={() => setEditingPlan({})}
-          className="bg-green-500 text-white px-4 py-2.5 xs:py-2 rounded hover:bg-green-600 active:bg-green-700 transition-colors touch-manipulation text-sm xs:text-base w-full xs:w-auto"
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
         >
           Add New Plan
         </button>
