@@ -1018,7 +1018,7 @@ const UpdateBooking = () => {
               {/* Status */}
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-700">
-                  Booking Status <span className="text-red-500">*</span>
+                  Booking Status
                 </label>
                 <select
                   name="bookingStatus"
