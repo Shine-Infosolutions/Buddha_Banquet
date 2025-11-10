@@ -87,7 +87,6 @@ const MenuSelection = () => {
           </select>
         </div>
 
-        {/* Menu Items by Category */}
         {selectedRatePlan && (
           <div className="space-y-6">
             {categories.length === 0 && !loading && (
@@ -132,5 +131,4 @@ const MenuSelection = () => {
     </div>
   );
 };
-
 export default MenuSelection;

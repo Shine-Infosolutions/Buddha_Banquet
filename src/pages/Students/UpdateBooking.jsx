@@ -158,20 +158,24 @@ const UpdateBooking = () => {
     }
   }, [booking.rooms, booking.roomPricePerUnit]);
 
-  // Auto-calculate balance and update status if advance is paid
+  // Auto-calculate balance and update status if advance is paid (only if not manually overridden)
   useEffect(() => {
     const totalAdvance = booking.advance.reduce((sum, adv) => sum + (parseFloat(adv.amount) || 0), 0);
     const total = parseFloat(booking.total) || 0;
     const balance = total - totalAdvance;
     let newStatus = booking.bookingStatus;
     let statusBool = booking.status;
-    if (totalAdvance > 0) {
+    
+    // Only auto-update if user hasn't manually set a different status
+    if (totalAdvance > 0 && booking.bookingStatus !== "Confirmed") {
       newStatus = "Confirmed";
       statusBool = true;
-    } else {
+    } else if (totalAdvance === 0 && booking.bookingStatus === "Confirmed") {
+      // Only revert if status was auto-set to Confirmed
       newStatus = "Tentative";
       statusBool = false;
     }
+    
     setBooking((prev) => ({
       ...prev,
       balance: balance.toFixed(2),
@@ -1014,11 +1018,18 @@ const UpdateBooking = () => {
               {/* Status */}
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-700">
-                  Booking Status <span className="text-red-500">*</span>
+                  Booking Status
                 </label>
-                <div className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-gray-700">
-                  {booking.bookingStatus}
-                </div>
+                <select
+                  name="bookingStatus"
+                  className="w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-2 px-3"
+                  onChange={handleInputChange}
+                  value={booking.bookingStatus}
+                >
+                  <option value="Enquiry">Enquiry</option>
+                  <option value="Tentative">Tentative</option>
+                  <option value="Confirmed">Confirmed</option>
+                </select>
               </div>
 
               {/* Rate Plan */}
