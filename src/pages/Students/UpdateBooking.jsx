@@ -823,6 +823,7 @@ const UpdateBooking = () => {
                     <option value="Lawn">Lawn</option>
                     <option value="Banquet Hall">Banquet Hall</option>
                     <option value="Lawn + Banquet Hall">Lawn + Banquet Hall</option>
+                    <option value="Rooftop Hall">Rooftop Hall</option>
                   </select>
                 </div>
               </div>
@@ -986,6 +987,7 @@ const UpdateBooking = () => {
                     <option value="Lawn">Lawn</option>
                     <option value="Banquet Hall">Banquet Hall</option>
                     <option value="Lawn + Banquet Hall">Lawn + Banquet Hall</option>
+                    <option value="Rooftop Hall">Rooftop Hall</option>
                   </select>
                 </div>
               </div>
