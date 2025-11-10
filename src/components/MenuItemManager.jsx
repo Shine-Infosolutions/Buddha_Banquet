@@ -25,7 +25,6 @@ const MenuItemManager = () => {
   }, [])
 
   const getCategoryName = (categoryId) => {
-    console.log('getCategoryName called with:', categoryId, 'categories:', categories)
     if (!categoryId) return 'Unknown'
     
     // If categoryId is already a category object, return its cateName
@@ -33,13 +32,17 @@ const MenuItemManager = () => {
       return categoryId.cateName
     }
     
+    // If categoryId is a string that looks like a category name, return it
+    if (typeof categoryId === 'string' && !categoryId.match(/^[0-9a-fA-F]{24}$/)) {
+      return categoryId
+    }
+    
     // Otherwise, find the category by ID
     const category = categories.find(cat => 
       cat._id === categoryId || 
       cat._id?.toString() === categoryId?.toString()
     )
-    console.log('Found category:', category)
-    return category?.cateName || 'Unknown'
+    return category?.cateName || categoryId || 'Unknown'
   }
 
   const [categoryNames, setCategoryNames] = useState({})

@@ -230,13 +230,8 @@ const MenuSelector = ({
         let categoryMatch = false;
         if (item.category) {
           if (typeof item.category === 'string') {
-            // Try regex match first
-            const match = item.category.match(/cateName:\s*['"]([^'"]+)['"]/); 
-            if (match && match[1] === currentCategory) {
-              categoryMatch = true;
-            } else if (item.category === currentCategory) {
-              categoryMatch = true;
-            }
+            // Direct string match
+            categoryMatch = item.category === currentCategory;
           } else if (typeof item.category === 'object') {
             categoryMatch = (item.category.cateName || item.category.name) === currentCategory;
           }

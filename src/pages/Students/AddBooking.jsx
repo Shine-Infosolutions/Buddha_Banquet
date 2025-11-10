@@ -816,13 +816,19 @@ const AddBooking = () => {
 
                 {/* Status */}
                 <div className="space-y-1">
-                  {/* Booking Status is now managed automatically. No dropdown shown. */}
                   <label className="block text-sm font-medium text-gray-700">
                     Booking Status
                   </label>
-                  <div className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-gray-700">
-                    {form.bookingStatus}
-                  </div>
+                  <select
+                    name="bookingStatus"
+                    className="w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-2 px-3"
+                    onChange={handleChange}
+                    value={form.bookingStatus}
+                  >
+                    <option value="Enquiry">Enquiry</option>
+                    <option value="Tentative">Tentative</option>
+                    <option value="Confirmed">Confirmed</option>
+                  </select>
                 </div>
 
                 {/* Rate Plan */}
