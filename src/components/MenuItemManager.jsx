@@ -317,7 +317,7 @@ const MenuItemManager = () => {
   }
 
   const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this item?')) {
+    if (window.confirm('Are you sure you want to delete this item?')) {
       try {
         const response = await fetch(`https://regalia-backend.vercel.app/api/menu-items/${id}`, {
           method: 'DELETE'
@@ -474,6 +474,12 @@ const MenuItemManager = () => {
                             className="text-blue-500 hover:text-blue-700 p-1"
                           >
                             <FaEdit size={14} />
+                          </button>
+                          <button 
+                            onClick={() => handleEdit(item._id || item.id)}
+                            className="text-blue-500 hover:text-blue-700 p-2 mr-2"
+                          >
+                            <FaEdit />
                           </button>
                           <button 
                             onClick={() => handleDelete(item._id || item.id)}

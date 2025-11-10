@@ -346,7 +346,7 @@ const PlanLimitManager = () => {
                 </h3>
                 <button
                   onClick={() => setEditingPlan(limit)}
-                  className="text-blue-600 hover:text-blue-800 active:text-blue-900 text-xs xs:text-sm touch-manipulation"
+                  className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-xs xs:text-sm touch-manipulation"
                 >
                   Edit
                 </button>
