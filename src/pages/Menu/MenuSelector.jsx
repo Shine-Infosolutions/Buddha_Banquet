@@ -220,50 +220,38 @@ const MenuSelector = ({
     fetchData();
   }, [axios]);
 
-  // Get items for current category filtered by foodType
+  // Get items for current category filtered by foodType and ratePlan
   const currentCategoryItems = useMemo(() => {
     if (!menuItems.length || !currentCategory) return [];
     
-    const filteredItems = menuItems
-      .filter(item => {
-        // Filter by category - handle different category formats
-        let categoryMatch = false;
-        if (item.category) {
-          if (typeof item.category === 'string') {
-            // Try regex match first
-            const match = item.category.match(/cateName:\s*['"]([^'"]+)['"]/); 
-            if (match && match[1] === currentCategory) {
-              categoryMatch = true;
-            } else if (item.category === currentCategory) {
-              categoryMatch = true;
-            }
-          } else if (typeof item.category === 'object') {
-            categoryMatch = (item.category.cateName || item.category.name) === currentCategory;
-          }
-        }
-        
-        if (!categoryMatch) return false;
-        
-        // Filter by foodType - handle 'Both' case
-        if (foodType && item.foodType) {
-          // If item foodType is 'Both', show for any selected foodType
-          if (item.foodType === 'Both') {
-            return true;
-          }
-          // Otherwise exact match
-          return item.foodType === foodType;
-        }
-        
-        return true;
-      });
+    // Find the current category object to get its ID
+    const currentCategoryObj = categories.find(cat => 
+      (cat.cateName || cat.name) === currentCategory
+    );
+    const currentCategoryId = currentCategoryObj?._id || currentCategoryObj?.id;
     
-    // Remove duplicates by name and create unique items
+    const filteredItems = menuItems.filter(item => {
+      // Match category by ID since menu items store category as ID string
+      const categoryMatch = item.category === currentCategoryId;
+      
+      if (!categoryMatch) return false;
+      
+      // Filter by foodType
+      if (foodType && item.foodType) {
+        if (item.foodType === 'Both') return true;
+        return item.foodType === foodType;
+      }
+      
+      return true;
+    });
+    
+    // Remove duplicates and format
     const uniqueItems = [];
     const seenNames = new Set();
     
     filteredItems.forEach(item => {
       const itemName = item.name || item.itemName;
-      if (!seenNames.has(itemName)) {
+      if (itemName && !seenNames.has(itemName)) {
         seenNames.add(itemName);
         uniqueItems.push({
           id: item._id || item.id || itemName,
@@ -273,7 +261,7 @@ const MenuSelector = ({
     });
     
     return uniqueItems;
-  }, [menuItems, currentCategory, foodType]);
+  }, [menuItems, currentCategory, foodType, ratePlan, categories]);
 
   const handleSelectItem = (item) => {
     setSelectedItems(prev => {
