@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import Logo from "../../assets/RegaliaLogo.png";
+import Logo from "../../assets/pcs.png";
 import { useNavigate } from "react-router-dom";
 
 const MenuView = () => {
@@ -103,7 +103,7 @@ const MenuView = () => {
         <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
           <div className="px-4 py-5 sm:px-4 bg-gradient-to-r from-[#f7f5ef] to-[#c3ad6b]/30">
             <h3 className="text-lg leading-6 font-bold text-gray-900 text-center">
-              REGALIA
+              BUDDHA
             </h3>
           </div>
           <div className="h-3"></div>

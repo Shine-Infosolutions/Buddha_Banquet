@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { useReactToPrint } from "react-to-print";
-import Logo from "../assets/RegaliaLogo.png";
+import Logo from "../assets/pcs.png";
 
 const ChefPDFPreview = ({ booking, className }) => {
   const [showPreview, setShowPreview] = useState(false);
@@ -139,8 +139,8 @@ const ChefPDFPreview = ({ booking, className }) => {
               ) : (
                 <div ref={printRef} className="bg-white p-8 max-w-4xl mx-auto">
                   <div className="text-center mb-8">
-                    <img src={Logo} alt="REGALIA" className="w-20 h-20 mx-auto mb-4" />
-                    <h1 className="text-2xl font-bold">REGALIA - CHEF INSTRUCTIONS</h1>
+                    <img src={Logo} alt="BUDDHA" className="w-20 h-20 mx-auto mb-4" />
+                    <h1 className="text-2xl font-bold">BUDDHA - CHEF INSTRUCTIONS</h1>
                   </div>
                   
                   <div className="mb-8">
