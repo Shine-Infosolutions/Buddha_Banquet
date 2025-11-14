@@ -121,7 +121,6 @@ const MenuSelection = () => {
             })}
           </div>
         )}
-
         {loading && (
           <div className="bg-white rounded-lg shadow p-6 text-center" style={{border: '1px solid hsl(45, 100%, 85%)'}}>
             <p className="text-gray-500">Loading menu items...</p>

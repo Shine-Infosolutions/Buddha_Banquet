@@ -187,9 +187,9 @@ function LaganCalendar({ setSidebarOpen }) {
       textClass = 'text-white';
       borderClass = 'border-[#c3ad6b]';
     } else if (isAuspicious) {
-      bgClass = 'bg-green-50';
-      borderClass = 'border-green-300';
-      textClass = 'text-green-800';
+      bgClass = 'bg-red-100';
+      borderClass = 'border-red-500';
+      textClass = 'text-red-900';
     }
     
     const tooltipText = isAuspicious 
@@ -205,7 +205,7 @@ function LaganCalendar({ setSidebarOpen }) {
         title={tooltipText}
       >
         {isAuspicious && !isSelected && (
-          <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 shadow-sm" />
+          <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-red-500 shadow-md" />
         )}
         
         {fillPosition === 'upper' && !isSelected && (
@@ -418,7 +418,7 @@ function LaganCalendar({ setSidebarOpen }) {
                 <h4 className="text-sm font-semibold text-gray-700">Calendar Legend:</h4>
                 <div className="flex flex-wrap gap-4 text-sm">
                   <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 bg-green-50 border-2 border-green-300 rounded shadow-sm"></div>
+                    <div className="w-5 h-5 bg-red-50 border-2 border-red-300 rounded shadow-sm"></div>
                     <span className="text-gray-700">Auspicious Dates</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -478,7 +478,7 @@ function LaganCalendar({ setSidebarOpen }) {
                     Bookings for {selectedDate}
                   </h3>
                   {auspiciousDates.has(selectedDate) && (
-                    <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                    <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
                       ✨ Auspicious Date
                     </div>
                   )}

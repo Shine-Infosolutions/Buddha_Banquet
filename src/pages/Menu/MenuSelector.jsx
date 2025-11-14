@@ -1,13 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAppContext } from "../../context/AppContext";
 import useWebSocket from "../../hooks/useWebSocket";
+import toast from "react-hot-toast";
 const MenuSelector = ({
   onSave,
   onSaveCategory,
   onClose,
   initialItems,
   foodType,
-  ratePlan
+  ratePlan,
+  bookingId
 }) => {
   const userRole = localStorage.getItem('role');
   const isAdmin = userRole?.toLowerCase() === 'admin';
@@ -15,6 +17,7 @@ const MenuSelector = ({
   const [categories, setCategories] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedItems, setSelectedItems] = useState(initialItems || []);
   const [currentCategory, setCurrentCategory] = useState("");
   const [planLimits, setPlanLimits] = useState({});
@@ -50,10 +53,20 @@ const MenuSelector = ({
   const fetchMenuItems = async () => {
     try {
       const response = await axios.get('/api/menu-items');
-      return response.data.success ? response.data.data : response.data;
+      return response.data;
     } catch (error) {
       console.error('Error fetching menu items:', error);
       return [];
+    }
+  };
+
+  const fetchMenusByBooking = async (bookingId) => {
+    try {
+      const response = await axios.get(`/api/menus/${bookingId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching menus by booking:', error);
+      return null;
     }
   };
 
@@ -79,7 +92,7 @@ const MenuSelector = ({
 
   const deleteMenuItems = async () => {
     try {
-      const response = await axios.delete('/api/menu-items');
+      const response = await axios.delete('/api/menu-items/all');
       return response.data;
     } catch (error) {
       console.error('Error deleting menu items:', error);
@@ -137,8 +150,26 @@ const MenuSelector = ({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [menuData, categoriesData, limitsData] = await Promise.all([
-          fetchMenuItems(),
+        setError(null);
+        let menuData;
+        
+        // If bookingId is provided, prioritize booking-specific data
+        if (bookingId) {
+          const bookingMenuData = await fetchMenusByBooking(bookingId);
+          console.log('Booking-specific menu data:', bookingMenuData);
+          if (bookingMenuData && bookingMenuData.success && bookingMenuData.data) {
+            menuData = bookingMenuData.data;
+          } else {
+            // Fallback to general menu items if booking data not available
+            menuData = await fetchMenuItems();
+          }
+        } else {
+          // Fetch general menu items when no bookingId
+          menuData = await fetchMenuItems();
+        }
+        console.log('Final menu data to process:', menuData);
+        
+        const [categoriesData, limitsData] = await Promise.all([
           fetchCategories(),
           fetchPlanLimits()
         ]);
@@ -198,10 +229,29 @@ const MenuSelector = ({
         }
         
         // Handle menu items
+        console.log('Raw menuData:', menuData);
         if (menuData) {
-          const items = Array.isArray(menuData) ? menuData :
-                       menuData.data ? menuData.data :
-                       menuData.items ? menuData.items : [];
+          let items = [];
+          
+          if (Array.isArray(menuData)) {
+            items = menuData;
+          } else if (menuData.data && Array.isArray(menuData.data)) {
+            items = menuData.data;
+          } else if (menuData.items && Array.isArray(menuData.items)) {
+            items = menuData.items;
+          } else if (menuData.limits) {
+            // Handle booking-specific menu data with limits structure
+            // Convert limits object to menu items format
+            items = Object.entries(menuData.limits || {}).map(([itemId, quantity]) => ({
+              _id: itemId,
+              name: `Item ${itemId.slice(-6)}`,
+              category: 'general',
+              foodType: foodType || 'Both',
+              quantity: quantity
+            }));
+          }
+          
+          console.log('Processed menu items:', items);
           setMenuItems(items);
         }
         
@@ -209,10 +259,19 @@ const MenuSelector = ({
         if (limitsData) {
           const limits = limitsData.success ? limitsData.data : limitsData;
           setPlanLimits(limits);
+        } else if (menuData && menuData.limits) {
+          // Use limits from booking menu data if available
+          setPlanLimits([{
+            foodType: foodType,
+            ratePlan: ratePlan,
+            limits: menuData.limits
+          }]);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
         console.error('Error details:', error.response?.data);
+        setError('Failed to load menu. Please check your connection and try again.');
+        toast.error('Failed to load menu data');
       } finally {
         setLoading(false);
       }
@@ -222,7 +281,17 @@ const MenuSelector = ({
 
   // Get items for current category filtered by foodType and ratePlan
   const currentCategoryItems = useMemo(() => {
-    if (!menuItems.length || !currentCategory) return [];
+    console.log('Computing currentCategoryItems:', {
+      menuItemsLength: menuItems.length,
+      currentCategory,
+      foodType,
+      categories: categories.length
+    });
+    
+    if (!menuItems.length || !currentCategory) {
+      console.log('Early return: no menu items or category');
+      return [];
+    }
     
     // Find the current category object to get its ID
     const currentCategoryObj = categories.find(cat => 
@@ -230,20 +299,42 @@ const MenuSelector = ({
     );
     const currentCategoryId = currentCategoryObj?._id || currentCategoryObj?.id;
     
+    console.log('Category matching:', {
+      currentCategory,
+      currentCategoryObj,
+      currentCategoryId
+    });
+    
     const filteredItems = menuItems.filter(item => {
+      console.log('Checking item:', item);
+      
       // Match category by ID since menu items store category as ID string
       const categoryMatch = item.category === currentCategoryId;
+      
+      console.log('Category match result:', {
+        itemCategory: item.category,
+        currentCategoryId,
+        categoryMatch
+      });
       
       if (!categoryMatch) return false;
       
       // Filter by foodType
       if (foodType && item.foodType) {
         if (item.foodType === 'Both') return true;
-        return item.foodType === foodType;
+        const foodTypeMatch = item.foodType === foodType;
+        console.log('Food type match:', {
+          itemFoodType: item.foodType,
+          requiredFoodType: foodType,
+          foodTypeMatch
+        });
+        return foodTypeMatch;
       }
       
       return true;
     });
+    
+    console.log('Filtered items:', filteredItems);
     
     // Remove duplicates and format
     const uniqueItems = [];
@@ -260,6 +351,7 @@ const MenuSelector = ({
       }
     });
     
+    console.log('Final unique items:', uniqueItems);
     return uniqueItems;
   }, [menuItems, currentCategory, foodType, ratePlan, categories]);
 
@@ -392,6 +484,68 @@ const MenuSelector = ({
       <div className="modal modal-open">
         <div className="modal-box max-w-6xl h-[92vh] flex items-center justify-center">
           <div className="loading loading-spinner loading-lg"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="modal modal-open">
+        <div className="modal-box max-w-6xl h-[92vh] flex flex-col items-center justify-center">
+          <button className="btn btn-sm btn-circle btn-ghost absolute right-4 top-4" onClick={onClose}>✕</button>
+          <div className="text-center">
+            <div className="text-error text-6xl mb-4">⚠️</div>
+            <h3 className="text-xl font-bold mb-2">Failed to Load Menu</h3>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button 
+              className="btn btn-primary"
+              onClick={() => {
+                setLoading(true);
+                setError(null);
+                // Retry fetching data
+                const fetchData = async () => {
+                  try {
+                    const [menuData, categoriesData, limitsData] = await Promise.all([
+                      fetchMenuItems(),
+                      fetchCategories(),
+                      fetchPlanLimits()
+                    ]);
+                    
+                    if (categoriesData) {
+                      const cats = Array.isArray(categoriesData) ? categoriesData : 
+                                  categoriesData.data ? categoriesData.data : 
+                                  categoriesData.categories ? categoriesData.categories : [];
+                      setCategories(cats);
+                      if (cats.length > 0) {
+                        setCurrentCategory(cats[0].cateName || cats[0].name);
+                      }
+                    }
+                    
+                    if (menuData) {
+                      const items = Array.isArray(menuData) ? menuData :
+                                   menuData.data ? menuData.data :
+                                   menuData.items ? menuData.items : [];
+                      setMenuItems(items);
+                    }
+                    
+                    if (limitsData) {
+                      const limits = limitsData.success ? limitsData.data : limitsData;
+                      setPlanLimits(limits);
+                    }
+                  } catch (error) {
+                    setError('Failed to load menu. Please check your connection and try again.');
+                    toast.error('Failed to load menu data');
+                  } finally {
+                    setLoading(false);
+                  }
+                };
+                fetchData();
+              }}
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );

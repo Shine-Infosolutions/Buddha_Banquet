@@ -250,6 +250,7 @@ const Invoice = () => {
                   <p><span className="font-medium">Time:</span> {booking.time}</p>
                   <p><span className="font-medium">Hall:</span> {booking.hall}</p>
                   <p><span className="font-medium">Guests:</span> {booking.pax} pax</p>
+                  <p><span className="font-medium">Function:</span> {booking.customFunctionType || booking.functionType}</p>
                   <p><span className="font-medium">Status:</span> 
                     <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold print:bg-transparent print:text-black print:px-0 print:py-0 ${
                       booking.bookingStatus === 'Confirmed' ? 'bg-green-100 text-green-800' :
