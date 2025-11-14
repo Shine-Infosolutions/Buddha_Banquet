@@ -25,11 +25,11 @@ import {
 const RATE_CONFIG = {
   Veg: {
     Silver: {
-      basePrice: 1050,
+      basePrice: 1299,
       taxPercent: 18,
     },
     Gold: {
-      basePrice: 1250,
+      basePrice: 1499,
       taxPercent: 18,
     },
     Platinum: {
@@ -39,11 +39,11 @@ const RATE_CONFIG = {
   },
   "Non-Veg": {
     Silver: {
-      basePrice: 1050,
+      basePrice: 1599,
       taxPercent: 18,
     },
     Gold: {
-      basePrice: 1250,
+      basePrice: 1899,
       taxPercent: 18,
     },
     Platinum: {
@@ -53,6 +53,7 @@ const RATE_CONFIG = {
   },
 };
 
+
 const requiredFields = [
   "name",
   "number",
@@ -60,6 +61,7 @@ const requiredFields = [
   "pax",
   "ratePlan",
   "foodType",
+  "hall",
 ];
 
 const AddBooking = () => {
@@ -114,6 +116,7 @@ const AddBooking = () => {
     balance: "",
     foodType: "Veg",
     functionType: "Wedding", // Default function type
+    customFunctionType: "", // Custom function type when "Other" is selected
     ratePerPax: "",
     notes: "",
     menuItems: "",
@@ -343,6 +346,7 @@ const AddBooking = () => {
     if (!form.pax) newErrors.pax = "Number of pax is required";
     if (!form.ratePlan) newErrors.ratePlan = "Rate plan is required";
     if (!form.foodType) newErrors.foodType = "Food type is required";
+    if (!form.hall) newErrors.hall = "Hall is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -373,6 +377,7 @@ const AddBooking = () => {
       // Prepare the payload - explicitly structure the data
       const payload = {
         ...form,
+        functionType: form.functionType === "Other" ? "Other" : form.functionType,
         complimentaryRooms:
           form.complimentaryRooms === "" ? 0 : Number(form.complimentaryRooms),
         decorationCharge: form.hasDecoration ? (parseFloat(form.decorationCharge) || 0) : 0,
@@ -383,7 +388,7 @@ const AddBooking = () => {
             changedAt: new Date().toISOString(),
           },
         ],
-        menuItems: undefined,
+        menuItems: form.menuItems ? form.menuItems.split(", ").filter(item => item.trim()) : [],
         categorizedMenu: form.categorizedMenu || {},
         ...(form.statusChangedAt
           ? { statusChangedAt: form.statusChangedAt }
@@ -669,9 +674,10 @@ const AddBooking = () => {
                     required
                   >
                     <option value="">Select Hall Type</option>
+                    <option value="Nirvana">Nirvana</option>
+                    <option value="Mandala">Mandala</option>
+                    <option value="Conference">Conference</option>
                     <option value="Lawn">Lawn</option>
-                    <option value="Banquet Hall">Banquet Hall</option>
-                    <option value="Lawn + Banquet Hall">Lawn + Banquet Hall</option>
                   </select>
                   {errors.hall && (
                     <p className="text-red-500 text-xs mt-1">{errors.hall}</p>
@@ -859,7 +865,7 @@ const AddBooking = () => {
                     <option value="">Select Rate Plan</option>
                     <option value="Silver">Silver</option>
                     <option value="Gold">Gold</option>
-                    {/* <option value="Platinum">Platinum</option> */}
+                    <option value="Platinum">Platinum</option>
                   </select>
                   {errors.ratePlan && (
                     <p className="text-red-500 text-xs mt-1">
@@ -916,8 +922,26 @@ const AddBooking = () => {
                     <option value="Corporate meeting">Corporate meeting</option>
                     <option value="Haldi function">Haldi function</option>
                     <option value="Farewell">Farewell</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
+
+                {/* Custom Function Type - Show only when Other is selected */}
+                {form.functionType === "Other" && (
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Custom Function Type
+                    </label>
+                    <input
+                      type="text"
+                      name="customFunctionType"
+                      className="w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-2 px-3"
+                      onChange={handleChange}
+                      value={form.customFunctionType}
+                      placeholder="Enter custom function type"
+                    />
+                  </div>
+                )}
 
                 {/* Meal Plan */}
                 <div className="space-y-1">

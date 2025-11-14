@@ -16,9 +16,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
   const menuItems = [
     {
-      title: 'Calendar',
-      icon: FaCalendarAlt,
-      path: '/calendar'
+      title: 'Lagan Calendar',
+      icon: FaCalendarCheck,
+      path: '/lagan-calendar'
     },
     {
       title: 'Booking List',
@@ -31,9 +31,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       path: '/menu-plan'
     },
     {
-      title: 'Lagan Calendar',
-      icon: FaCalendarCheck,
-      path: '/lagan-calendar'
+      title: 'Calendar',
+      icon: FaCalendarAlt,
+      path: '/calendar'
     }
   ]
 

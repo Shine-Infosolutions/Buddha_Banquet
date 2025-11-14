@@ -22,49 +22,41 @@ const ChefPDFPreview = ({ booking, className }) => {
 
       const token = localStorage.getItem('token');
       
-      // Try multiple API endpoints
-      const endpoints = [
-        `https://budha-backed.vercel.app/api/banquet-menus/${booking._id}`,
-        `https://budha-backed.vercel.app/api/menus/all/${booking.customerRef || booking._id}`,
-        `https://budha-backed.vercel.app/api/menus/${booking._id}`
-      ];
-
-      for (const endpoint of endpoints) {
-        try {
-          console.log('Trying endpoint:', endpoint);
-          const response = await axios.get(endpoint, {
+      // Try to fetch booking data with menu
+      try {
+        console.log('Fetching booking data for ID:', booking._id);
+        const response = await axios.get(
+          `https://budha-backed.vercel.app/api/bookings/get/${booking._id}`,
+          {
             headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          console.log('API Response:', response.data);
-          
-          let menuData = null;
-          if (response.data?.menu?.categories) {
-            menuData = response.data.menu.categories;
-          } else if (response.data?.data?.categories) {
-            menuData = response.data.data.categories;
-          } else if (response.data?.categories) {
-            menuData = response.data.categories;
-          } else if (response.data?.data) {
-            menuData = response.data.data;
           }
-          
-          if (menuData && Object.keys(menuData).length > 0) {
-            console.log('Found menu data:', menuData);
-            setMenuData(menuData);
-            return;
-          }
-        } catch (err) {
-          console.log('Endpoint failed:', endpoint, err.message);
-          continue;
+        );
+        
+        console.log('Booking API Response:', response.data);
+        
+        const bookingData = response.data?.booking || response.data;
+        
+        if (bookingData?.categorizedMenu && Object.keys(bookingData.categorizedMenu).length > 0) {
+          console.log('Found categorized menu:', bookingData.categorizedMenu);
+          setMenuData(bookingData.categorizedMenu);
+          return;
         }
+        
+        if (bookingData?.menuItems && Array.isArray(bookingData.menuItems) && bookingData.menuItems.length > 0) {
+          console.log('Found menu items array:', bookingData.menuItems);
+          setMenuData({ 'Selected Menu Items': bookingData.menuItems });
+          return;
+        }
+        
+      } catch (err) {
+        console.log('Booking API failed:', err.message);
       }
       
-      // If no API worked, use booking data as fallback
-      setMenuData(booking.categorizedMenu || {});
+      // If no menu data found, show empty state
+      setMenuData({});
     } catch (error) {
       console.error('Error fetching menu:', error);
-      setMenuData(booking.categorizedMenu || {});
+      setMenuData({});
     } finally {
       setLoading(false);
     }
@@ -161,37 +153,74 @@ const ChefPDFPreview = ({ booking, className }) => {
                     <h2 className="text-xl font-bold mb-6 pb-2" style={{borderBottom: '2px solid #c3ad6b', color: '#c3ad6b'}}>MENU ITEMS TO PREPARE</h2>
                     {(() => {
                       const displayMenuData = menuData || booking.categorizedMenu;
-                      return (displayMenuData && typeof displayMenuData === 'object' && Object.keys(displayMenuData).length > 0) ? (
-                        <div className="grid grid-cols-2 gap-8">
-                          {Object.entries(displayMenuData).map(([category, items]) => {
-                            const skip = ["_id", "createdAt", "updatedAt", "__v", "bookingRef", "customerRef"];
-                            if (skip.includes(category)) return null;
-                            if (Array.isArray(items) && items.length > 0) {
-                              return (
-                                <div key={category} className="mb-6">
-                                  <h3 className="text-lg font-bold mb-3 uppercase" style={{color: '#c3ad6b'}}>
-                                    {category.replaceAll("_", " ")}
-                                  </h3>
-                                  <ul className="space-y-2">
-                                    {items.map((item, i) => (
-                                      <li key={i} className="flex items-start">
-                                        <span className="mr-3 mt-1">•</span>
-                                        <span className="text-sm">{item}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              );
-                            }
-                            return null;
-                          })}
+                      
+                      // Check if we have valid menu data
+                      const hasValidMenuData = displayMenuData && 
+                        typeof displayMenuData === 'object' && 
+                        Object.keys(displayMenuData).some(key => {
+                          const skip = ["_id", "createdAt", "updatedAt", "__v", "bookingRef", "customerRef"];
+                          return !skip.includes(key) && Array.isArray(displayMenuData[key]) && displayMenuData[key].length > 0;
+                        });
+                      
+                      if (hasValidMenuData) {
+                        return (
+                          <div className="grid grid-cols-2 gap-8">
+                            {Object.entries(displayMenuData).map(([category, items]) => {
+                              const skip = ["_id", "createdAt", "updatedAt", "__v", "bookingRef", "customerRef"];
+                              if (skip.includes(category)) return null;
+                              if (Array.isArray(items) && items.length > 0) {
+                                return (
+                                  <div key={category} className="mb-6">
+                                    <h3 className="text-lg font-bold mb-3 uppercase" style={{color: '#c3ad6b'}}>
+                                      {category.replaceAll("_", " ")}
+                                    </h3>
+                                    <ul className="space-y-2">
+                                      {items.map((item, i) => (
+                                        <li key={i} className="flex items-start">
+                                          <span className="mr-3 mt-1">•</span>
+                                          <span className="text-sm">{item}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })}
+                          </div>
+                        );
+                      }
+                      
+                      // Check for menuItems as string or array
+                      if (booking.menuItems) {
+                        if (Array.isArray(booking.menuItems) && booking.menuItems.length > 0) {
+                          return (
+                            <div className="text-sm">
+                              <ul className="space-y-2">
+                                {booking.menuItems.map((item, i) => (
+                                  <li key={i} className="flex items-start">
+                                    <span className="mr-3 mt-1">•</span>
+                                    <span>{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          );
+                        } else if (typeof booking.menuItems === 'string') {
+                          return (
+                            <div className="text-sm">
+                              <p>{booking.menuItems}</p>
+                            </div>
+                          );
+                        }
+                      }
+                      
+                      // No menu data available
+                      return (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500 mb-2">No menu items have been selected for this booking yet.</p>
+                          <p className="text-sm text-gray-400">Please add menu items through the booking management system.</p>
                         </div>
-                      ) : booking.menuItems ? (
-                        <div className="text-sm">
-                          <p>{booking.menuItems}</p>
-                        </div>
-                      ) : (
-                        <p className="text-center py-8 text-gray-500">No menu items available</p>
                       );
                     })()}
                   </div>

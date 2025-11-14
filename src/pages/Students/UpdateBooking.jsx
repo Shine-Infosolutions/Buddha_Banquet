@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { Link, useNavigate, useParams } from "react-router-dom";
-
+import useWebSocket from '../../hooks/useWebSocket';
 import axios from "axios";
 import {
   FaUser,
@@ -76,8 +76,8 @@ const UpdateBooking = () => {
   const [loading, setLoading] = useState(false);
   const [menuLoading, setMenuLoading] = useState(false);
 
-  // Mock WebSocket for now
-  const sendMessage = () => {};
+  // WebSocket connection
+  const { sendMessage } = useWebSocket();
 
   // Staff edit limit logic (frontend) - define at component level so it's available in JSX
   const isStaffEditLimitReached =
@@ -247,8 +247,10 @@ const UpdateBooking = () => {
       if (bookingResponse.data) {
         const bookingData = bookingResponse.data.data || bookingResponse.data;
 
-          // Flatten all items from categorizedMenu into a single array
-          const menuItems = categorizedMenu
+          // Use menuItems from booking data directly, fallback to categorizedMenu if needed
+          const menuItems = bookingData.menuItems && Array.isArray(bookingData.menuItems) && bookingData.menuItems.length > 0
+            ? bookingData.menuItems
+            : categorizedMenu
             ? Object.entries(categorizedMenu)
                 .filter(([key]) => !['_id', 'bookingRef', 'createdAt', 'updatedAt', '__v', 'customerRef'].includes(key))
                 .map(([, arr]) => arr)
@@ -514,6 +516,7 @@ const UpdateBooking = () => {
       menuItems: selectedItems,
       categorizedMenu,
     }));
+    setShowMenuModal(false);
   };
 
   const updateBooking = () => {
@@ -622,7 +625,15 @@ const UpdateBooking = () => {
       .put(`https://budha-backed.vercel.app/api/bookings/update/${id}`, payload)
       .then((res) => {
         if (res.data) {
-
+          // Send WebSocket notification for real-time update
+          sendMessage({
+            type: 'BOOKING_UPDATED',
+            data: {
+              id: id,
+              name: payload.name,
+              bookingStatus: payload.bookingStatus
+            }
+          });
 
           toast.success("Booking updated successfully!");
           setLoading(false);
@@ -1575,7 +1586,9 @@ const UpdateBooking = () => {
                     name="menuItems"
                     className="w-full rounded-lg border border-gray-300 bg-gray-50 py-2 px-3 h-24"
                     value={
-                      booking.categorizedMenu
+                      booking.menuItems && booking.menuItems.length > 0
+                        ? booking.menuItems.join(", ")
+                        : booking.categorizedMenu
                         ? Object.entries(booking.categorizedMenu)
                             .filter(
                               ([key]) =>
@@ -1585,6 +1598,7 @@ const UpdateBooking = () => {
                                   "createdAt",
                                   "updatedAt",
                                   "__v",
+                                  "customerRef"
                                 ].includes(key)
                             )
                             .map(([, arr]) => arr)
@@ -1595,7 +1609,7 @@ const UpdateBooking = () => {
                     readOnly
                     placeholder="No menu items selected yet - click 'Select Menu Items' to add items"
                   />
-                  {!booking.categorizedMenu && (
+                  {(!booking.menuItems || booking.menuItems.length === 0) && !booking.categorizedMenu && (
                     <div className="text-sm text-blue-600 mt-1">
                       💡 This booking doesn't have menu items yet. Use the "Select Menu Items" button above to add them.
                     </div>
@@ -1682,15 +1696,7 @@ const UpdateBooking = () => {
                   </button>
                 </div>
                 <MenuSelector
-                  initialItems={
-                    booking.menuItems && booking.menuItems.length > 0 
-                      ? booking.menuItems 
-                      : booking.categorizedMenu?.categories
-                        ? Object.values(booking.categorizedMenu.categories)
-                            .flat()
-                            .filter((item) => typeof item === "string")
-                        : []
-                  }
+                  initialItems={booking.menuItems || []}
                   foodType={booking.foodType}
                   ratePlan={booking.ratePlan}
                   onSave={handleMenuSelection}

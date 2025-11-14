@@ -1,14 +1,30 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
+import { useReactToPrint } from "react-to-print";
 import Logo from "../../assets/pcs.png";
 import { useNavigate } from "react-router-dom";
+import WebSocketStatus from '../../components/WebSocketStatus';
 
 const MenuView = () => {
   const { id } = useParams();
   const [menu, setMenu] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const printRef = useRef();
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Menu_${id}`,
+    pageStyle: `
+      @page {
+        size: A4;
+        margin: 0.5in;
+      }
+      @media print {
+        body { -webkit-print-color-adjust: exact; }
+      }
+    `
+  });
   const navigate = useNavigate();
   useEffect(() => {
     const fetchMenu = async () => {
@@ -24,26 +40,61 @@ const MenuView = () => {
             }
           );
           console.log('Menu API Response:', res.data);
-          setMenu(res.data.data?.categories || res.data.data || res.data || {});
-          return;
+          
+          // Check if menu has actual menu items, not just metadata
+          const menuData = res.data.data?.categories || res.data.data || res.data;
+          if (menuData && typeof menuData === 'object' && Object.keys(menuData).some(key => 
+            !['_id', 'bookingRef', 'customerRef', 'createdAt', 'updatedAt', '__v'].includes(key) && 
+            Array.isArray(menuData[key]) && menuData[key].length > 0
+          )) {
+            setMenu(menuData);
+            return;
+          }
+          console.log('Menu API returned metadata only, trying booking data...');
         } catch (menuError) {
           console.log('Menu not found, trying booking data...');
         }
         
         // Fallback: try to get menu from booking data
         const bookingRes = await axios.get(
-          `https://budha-backed.vercel.app/api/bookings/${id}`,
+          `https://budha-backed.vercel.app/api/bookings/get/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` }
           }
         );
         
-        const bookingData = bookingRes.data.data || bookingRes.data;
-        if (bookingData.categorizedMenu) {
-          setMenu(bookingData.categorizedMenu);
+        const bookingData = bookingRes.data.booking || bookingRes.data.data || bookingRes.data;
+        console.log('Full API Response:', bookingRes.data);
+        console.log('Booking data:', bookingData);
+        console.log('Menu items found:', bookingData?.menuItems);
+        console.log('Categorized menu found:', bookingData?.categorizedMenu);
+        
+        // Always set some menu data
+        let menuToSet = {};
+        
+        if (bookingData?.categorizedMenu && Object.keys(bookingData.categorizedMenu).length > 0) {
+          console.log('Using categorized menu');
+          menuToSet = bookingData.categorizedMenu;
+        } else if (bookingData?.menuItems && Array.isArray(bookingData.menuItems) && bookingData.menuItems.length > 0) {
+          console.log('Using menu items array:', bookingData.menuItems);
+          menuToSet = { 'Selected Menu Items': bookingData.menuItems };
         } else {
-          setError("No menu found for this booking. The menu may not have been created yet.");
+          console.log('No menu items found, showing booking info');
+          menuToSet = {
+            'Booking Information': [
+              `Guest: ${bookingData?.name || 'N/A'}`,
+              `Date: ${bookingData?.startDate ? new Date(bookingData.startDate).toLocaleDateString() : 'N/A'}`,
+              `Pax: ${bookingData?.pax || 'N/A'}`,
+              `Food Type: ${bookingData?.foodType || 'N/A'}`,
+              `Rate Plan: ${bookingData?.ratePlan || 'N/A'}`,
+              `Hall: ${bookingData?.hall || 'N/A'}`,
+              'Menu items not selected yet'
+            ]
+          };
         }
+        
+        console.log('Final menu to set:', menuToSet);
+        setMenu(menuToSet);
         
       } catch (error) {
         console.error('Fetch error:', error);
@@ -90,25 +141,43 @@ const MenuView = () => {
         >
           ← Back
         </button>
-
+        <WebSocketStatus className="print:hidden" />
       </div>
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <img
             src={Logo}
             alt="Hotel Logo"
-            className="w-48 h-48 mx-auto mb-4 object-contain"
+            className="w-[220px] h-[150px] mx-auto mb-4"
           />
         </div>
-        <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
-          <div className="px-4 py-5 sm:px-4 bg-gradient-to-r from-[#f7f5ef] to-[#c3ad6b]/30">
-            <h3 className="text-lg leading-6 font-bold text-gray-900 text-center">
-              BUDDHA
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={handlePrint}
+            className="inline-flex items-center gap-2 px-3 py-2 bg-[#c3ad6b] text-white rounded-lg shadow hover:bg-[#b39b5a] transition-colors font-semibold print:hidden"
+          >
+            🖨️ Print Menu
+          </button>
+        </div>
+        <div
+          ref={printRef}
+          className="bg-white shadow-lg rounded-2xl overflow-hidden print:pt-0 print:mt-0 print:shadow-none print:p-8 print:m-0"
+        >
+          <div className="px-4 py-5 sm:px-5 bg-gradient-to-r from-[#f7f5ef] to-[#c3ad6b]/30 print:rounded-none print:flex print:items-center print:justify-between">
+            <img
+              src={Logo}
+              alt="Hotel Logo"
+              className="hidden print:block print:mr-4 print:w-12"
+              style={{ maxWidth: "110px" ,maxHeight:"150px" }}
+            />
+            <h3 className="text-lg leading-6 font-bold text-gray-900 text-center flex-1 print:text-black print:text-center">
+              BUDHA HOTEL
             </h3>
+            <div className="hidden print:block print:w-24"></div>
           </div>
-          <div className="h-3"></div>
-          <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
+          <div className="h-3 print:h-2"></div>
+          <div className="border-t border-gray-200 px-4 py-5 sm:p-0 print:px-2 print:py-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 print:grid print:grid-cols-2 print:gap-4 print:p-0">
               {Object.entries(menu).map(([category, items]) => {
                 const skip = [
                   "_id",
@@ -123,9 +192,9 @@ const MenuView = () => {
                   return (
                     <div
                       key={category}
-                      className="bg-[#c3ad6b]/10 rounded-lg p-4 shadow-sm border border-[#c3ad6b]/30"
+                      className="bg-[#c3ad6b]/10 rounded-lg p-4 shadow-sm border border-[#c3ad6b]/30 print:shadow-none print:border print:bg-white print:p-2"
                     >
-                      <h4 className="text-lg font-semibold text-[#c3ad6b] mb-3 pb-2 border-b border-[#c3ad6b]/30">
+                      <h4 className="text-lg font-semibold text-[#c3ad6b] mb-3 pb-2 border-b border-[#c3ad6b]/30 print:text-black print:border-b print:border-gray-300">
                         {category
                           .replaceAll("_", " ")
                           .split(" ")
@@ -139,12 +208,12 @@ const MenuView = () => {
                         {items.map((item, i) => (
                           <li
                             key={i}
-                            className="flex items-start"
+                            className="flex items-start print:text-black"
                           >
-                            <span className="flex-shrink-0 h-5 w-5 text-[#c3ad6b] mr-2">
+                            <span className="flex-shrink-0 h-5 w-5 text-[#c3ad6b] mr-2 print:text-black">
                               •
                             </span>
-                            <span className="text-gray-700">
+                            <span className="text-gray-700 print:text-black">
                               {item}
                             </span>
                           </li>
